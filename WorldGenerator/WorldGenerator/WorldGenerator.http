@@ -1,0 +1,6 @@
+@WorldGenerator_HostAddress = http://localhost:5198
+
+GET {{WorldGenerator_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

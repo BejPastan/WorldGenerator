@@ -1,0 +1,12 @@
+/LanguagesComparison/MatrixComparison/bin
+/LanguagesComparison/MatrixComparison/obj
+/Testing/.vs
+Testing/Testing/appsettings.json
+/Testing/Testing/bin
+/Testing/Testing/obj
+/WorldGenerator/.vs
+/WorldGenerator/UnitTesting/bin
+/WorldGenerator/UnitTesting/obj
+/WorldGenerator/WorldGenerator/bin
+/WorldGenerator/WorldGenerator/obj
+worldGeneratorFront/.env
