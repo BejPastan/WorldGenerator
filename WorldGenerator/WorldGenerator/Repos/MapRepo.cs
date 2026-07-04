@@ -1,6 +1,8 @@
 ﻿using Dapper;
 using NetTopologySuite.Features;
 using NetTopologySuite.IO;
+using NetTopologySuite.IO.Converters;
+using System.Text.Json;
 using WorldGenerator.Models;
 using WorldGenerator.Repos.Interfaces;
 using WorldGenerator.Utils;
@@ -8,10 +10,49 @@ using WorldGenerator.Utils.Interfaces;
 
 namespace WorldGenerator.Repos
 {
-    public class MapRepo(IDBHandler db, ILogger<MapRepo> logger) : IMapRepo
+    public class MapRepo : IMapRepo
     {
-        readonly IDBHandler _db = db;
-        readonly ILogger _logger = logger;
+        public MapRepo(IDBHandler db, ILogger<MapRepo> logger)
+        {
+            _options = new JsonSerializerOptions
+            {
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+                Converters = { new GeoJsonConverterFactory() }
+            };
+            _db = db;
+            _logger = logger;
+        }
+
+        readonly IDBHandler _db;
+        readonly ILogger _logger;
+        readonly JsonSerializerOptions _options;
+
+
+        public async Task<string> AddWay(List<Node> nodes, string wayName)
+        {
+            #region setting converter
+
+            #endregion
+
+            var sql = new Lazy<string>(() => SqlLoader.Load("AddWayToMap.sql"));
+
+            var json = JsonSerializer.Serialize(nodes, _options);
+
+            DynamicParameters param = new();
+            param.Add("objects_array", json);
+            param.Add("way_name", wayName);
+            var resp = await _db.MakeQuery<WaysNodes>(sql.Value, param);
+            var wayNode = resp.FirstOrDefault();
+            if(wayNode != null)
+            {
+                return wayNode.WayId??throw new Exception("Error ocured when adding new way");
+            }
+            else
+            {
+                throw new Exception("Error ocured when adding new way");
+            }
+        }
+
 
 
         public async Task<FeatureCollection> GetMapPart(float minLat, float maxLat, float minLng, float maxLng, int zoom)
@@ -21,36 +62,7 @@ namespace WorldGenerator.Repos
                 throw new ArgumentException($"Zoom value must be between {Constants.MIN_ZOOM} and {Constants.MAX_ZOOM}");
             }
             #region SQL
-            string sql = """
-                                SELECT jsonb_build_object
-                (
-                	'type', 'FeatureCollection',
-                	'features', jsonb_agg
-                	(
-                		to_jsonb(objects)
-                	)
-                ) as resp
-                FROM 
-                (	
-                	SELECT 
-                		'Feature'as type, 
-                		ST_AsGeoJSON(ST_MakePolygon(ST_MakeLine(n.geom::geometry ORDER BY wn.sequence_id ASC))::geography)::jsonb as geometry, 
-                		jsonb_object_agg(wt.k, wt.v) as properties
-                	FROM Ways w 
-                	LEFT JOIN WaysNodes wn ON wn.way_id = w.id 
-                	LEFT JOIN Nodes n ON n.id = wn.node_id 
-                	LEFT JOIN WaysTags wt ON wt.way_id = w.id
-                	WHERE EXISTS 
-                	(
-                		SELECT 1 FROM WaysNodes wn 
-                		JOIN Nodes n ON n.id = wn.node_id 
-                		WHERE 
-                			wn.way_id = w.id AND 
-                			geom::geometry && ST_MakeEnvelope(@minLng, @minLat, @maxLng, @maxLat, 4326)
-                	)
-                	GROUP BY w.id
-                ) objects
-                """;
+            var sql = new Lazy<string>(() => SqlLoader.Load("GetMapGeojson.sql"));
             #endregion
 
             if (minLat > maxLat) {
@@ -65,7 +77,7 @@ namespace WorldGenerator.Repos
             param.Add("maxLat", maxLat);
             param.Add("minLng", minLng);
             param.Add("maxLng", maxLng);
-            var resp = await _db.MakeQuery<GeojsonDTO>(sql, param);
+            var resp = await _db.MakeQuery<GeojsonDTO>(sql.Value, param);
             var result = resp.FirstOrDefault();
             if(result == null)
             {

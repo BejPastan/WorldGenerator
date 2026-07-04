@@ -5,7 +5,20 @@ using WorldGenerator.Services.Interfaces;
 using WorldGenerator.Utils;
 using WorldGenerator.Utils.Interfaces;
 
+Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Development Allow", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173")
+            .WithMethods("GET", "POST", "DELETE", "PATCH")
+            .AllowAnyHeader();
+    });
+});
 
 // Add services to the container.
 builder.Services.AddSingleton<ISecretRepo, LocalSecretRepo>();
@@ -33,8 +46,8 @@ if (app.Environment.IsDevelopment())
     {
         options.SwaggerEndpoint("/openapi/v1.json","WorldGeneratorAPI");
     });
+    app.UseCors("Development Allow");
 }
-
 
 app.UseHttpsRedirection();
 

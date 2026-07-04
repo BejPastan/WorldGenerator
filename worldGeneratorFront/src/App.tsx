@@ -4,6 +4,7 @@ import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
 import { Map } from './components/Map'
+import { MapController } from './components/MapController'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -29,7 +30,7 @@ function App() {
         >
           Count is {count}
         </button>
-        <Map height="400px" width="400px" center={[0,0]} zoom={4} onPan={() => console.log('Panned')} onZoom={() => console.log('Zoomed')}></Map>
+        <MapController/>
       </section>
 
       <div className="ticks"></div>

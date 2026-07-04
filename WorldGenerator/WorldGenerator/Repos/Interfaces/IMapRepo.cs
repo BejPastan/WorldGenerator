@@ -1,4 +1,5 @@
 ﻿using NetTopologySuite.Features;
+using WorldGenerator.Models;
 
 namespace WorldGenerator.Repos.Interfaces
 {
@@ -14,5 +15,12 @@ namespace WorldGenerator.Repos.Interfaces
         /// <param name="zoom"></param>
         /// <returns></returns>
         Task<FeatureCollection> GetMapPart(float minLat,  float maxLat, float minLng, float maxLng, int zoom);
+        /// <summary>
+        /// Add new way to repo
+        /// </summary>
+        /// <param name="nodes">Nodes from which way is built</param>
+        /// <param name="wayName">name for new way</param>
+        /// <returns></returns>
+        Task<string> AddWay(List<Node> nodes, string wayName);
     }
 }
