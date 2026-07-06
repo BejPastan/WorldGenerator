@@ -1,7 +1,8 @@
 ﻿namespace WorldGenerator.Repos.Interfaces
 {
-    public interface ISecretRepo
+    public interface IDBConnectionFactory
     {
         string GetConnectionString(); 
+        public string connectionString { get; }
     }
 }

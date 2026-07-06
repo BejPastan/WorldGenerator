@@ -24,7 +24,7 @@ namespace WorldGenerator.Services.Interfaces
         /// </summary>
         /// <param name="nodes">List of nodes, both existing in databae, and new one</param>
         /// <returns></returns>
-        Task<string> AddWay(List<Node> nodes, string wayName);
+        Task<Guid> AddWay(List<Node> nodes, string wayName);
 
         //adding tags
     }

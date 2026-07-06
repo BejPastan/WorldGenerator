@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Npgsql;
+using WorldGenerator.Repos;
 using WorldGenerator.Repos.Interfaces;
 using WorldGenerator.Utils.Interfaces;
 
@@ -12,9 +13,9 @@ namespace WorldGenerator.Utils
         readonly NpgsqlDataSource dataSource;
         readonly ILogger _logger;
 
-        public DBController(ISecretRepo secretRepo, ILogger<DBController> logger)
+        public DBController(ILogger<DBController> logger, IDBConnectionFactory secretRepo)
         {
-            CONNECTION_STRING = secretRepo.GetConnectionString();
+            CONNECTION_STRING = secretRepo.connectionString;
             dataSource = NpgsqlDataSource.Create(CONNECTION_STRING);
             _logger = logger;
             _logger.LogInformation("DB data source created");

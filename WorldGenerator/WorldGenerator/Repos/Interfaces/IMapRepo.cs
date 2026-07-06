@@ -15,12 +15,24 @@ namespace WorldGenerator.Repos.Interfaces
         /// <param name="zoom"></param>
         /// <returns></returns>
         Task<FeatureCollection> GetMapPart(float minLat,  float maxLat, float minLng, float maxLng, int zoom);
+
+        #region Way Operations
         /// <summary>
         /// Add new way to repo
         /// </summary>
         /// <param name="nodes">Nodes from which way is built</param>
         /// <param name="wayName">name for new way</param>
         /// <returns></returns>
-        Task<string> AddWay(List<Node> nodes, string wayName);
+        Task<Guid> AddWay(List<Node> nodes, string wayName);
+        #endregion
+
+        #region Node Operations
+        /// <summary>
+        /// Add new node to database and return node id
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        Task<Guid> AddNode(NewNode node);
+        #endregion
     }
 }

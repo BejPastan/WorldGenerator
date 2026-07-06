@@ -17,7 +17,8 @@ namespace WorldGenerator.Repos
             _options = new JsonSerializerOptions
             {
                 DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-                Converters = { new GeoJsonConverterFactory() }
+                Converters = { new GeoJsonConverterFactory() },
+                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
             };
             _db = db;
             _logger = logger;
@@ -28,7 +29,7 @@ namespace WorldGenerator.Repos
         readonly JsonSerializerOptions _options;
 
 
-        public async Task<string> AddWay(List<Node> nodes, string wayName)
+        public async Task<Guid> AddWay(List<Node> nodes, string wayName)
         {
             #region setting converter
 
@@ -39,9 +40,11 @@ namespace WorldGenerator.Repos
             var json = JsonSerializer.Serialize(nodes, _options);
 
             DynamicParameters param = new();
-            param.Add("objects_array", json);
             param.Add("way_name", wayName);
+            param.Add("objects_array", json);
             var resp = await _db.MakeQuery<WaysNodes>(sql.Value, param);
+            _logger.LogInformation($"AddWay: {wayName} with nodes: {json}");
+            _logger.LogInformation($"AddWay: DB Response: {JsonSerializer.Serialize(resp)}");
             var wayNode = resp.FirstOrDefault();
             if(wayNode != null)
             {
@@ -52,7 +55,6 @@ namespace WorldGenerator.Repos
                 throw new Exception("Error ocured when adding new way");
             }
         }
-
 
 
         public async Task<FeatureCollection> GetMapPart(float minLat, float maxLat, float minLng, float maxLng, int zoom)
@@ -77,7 +79,7 @@ namespace WorldGenerator.Repos
             param.Add("maxLat", maxLat);
             param.Add("minLng", minLng);
             param.Add("maxLng", maxLng);
-            var resp = await _db.MakeQuery<GeojsonDTO>(sql.Value, param);
+            var resp = await _db.MakeQuery<GeojsonResp>(sql.Value, param);
             var result = resp.FirstOrDefault();
             if(result == null)
             {
@@ -87,6 +89,25 @@ namespace WorldGenerator.Repos
             var GJReader = new GeoJsonReader();
             var mapPart = GJReader.Read<FeatureCollection>(result.Resp);
             return mapPart;
+        }
+
+        public async Task<Guid> AddNode(NewNode node)
+        {
+            var sql = """
+                INSERT INTO Nodes (name, geom) VALUES (@name, ST_SetSRID(ST_MakePoint(@lng, @lat), 4326)) RETURNING id;
+                """;
+            var param = new DynamicParameters();
+            param.Add("name", node.Name);
+            param.Add("lat", node.Geom.Y);
+            param.Add("lng", node.Geom.X);
+
+            var resp = await _db.MakeQuery<Guid>(sql, param);
+            var result = resp.FirstOrDefault();
+            if (result == null)
+            {
+                throw new Exception("Error ocured when adding new node");
+            }
+            return result;
         }
     }
 }

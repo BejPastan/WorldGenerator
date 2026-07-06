@@ -1,115 +1,124 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Dapper;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NetTopologySuite.Features;
+using NetTopologySuite.Geometries;
+using NetTopologySuite.Index.Bintree;
 using NetTopologySuite.IO;
+using Testcontainers.PostgreSql;
+using UnitTesting.IntegrationTests;
 using WorldGenerator.Models;
 using WorldGenerator.Repos;
+using WorldGenerator.Repos.Interfaces;
+using WorldGenerator.Utils;
 using WorldGenerator.Utils.Interfaces;
 
 namespace UnitTesting.RepoTesting
 {
-    public class MapRepoTesting
+    [Collection("Database collection")]
+    public class MapRepoIntegrationTesting
     {
-        [Fact]
-        public async Task MapRepoTest_GetMapPart_IfInvertedElementsSwapThem()
+        private IDBHandler _db;
+        private MapRepo _mapRepo;
+
+        public MapRepoIntegrationTesting(DbMockupContainer dbContainer)
         {
-            //Arrange
-            var sql = GeoJsonMockData(out FeatureCollection targetResp, out Dictionary<string, string> param, out List<GeojsonDTO> dbResp);
-            var mapRepo = MockMapRepo(sql, param, dbResp);
+            var mockLogger = new Mock<ILogger<DBController>>();
 
-            //Act
-            var response = await mapRepo.GetMapPart(0, 0.01f, 1, -1, 10);
+            string testDbConnectionString = dbContainer._container.GetConnectionString();
+            var fakeConnectionFactory = new Mock<IDBConnectionFactory>();
+            fakeConnectionFactory.Setup(f => f.connectionString).Returns(testDbConnectionString);
 
-            //Assert
-            response.Should().BeEquivalentTo(targetResp);
+            _db = new DBController(mockLogger.Object, fakeConnectionFactory.Object);
+            var mockMapRepoLogger = new Mock<ILogger<MapRepo>>();
+            _mapRepo = new MapRepo(_db, mockMapRepoLogger.Object);
         }
 
         [Fact]
-        public void MapRepoTest_GetMapPart_IfZoomNegativeThrowError()
+        public async Task MapRepoIntegrationTest_AddNode_ReturnSuccess()
         {
             //Arrange
-            var sql = GeoJsonMockData(out FeatureCollection targetResp, out Dictionary<string, string> param, out List<GeojsonDTO> dbResp);
-            var mapRepo = MockMapRepo(sql, param, dbResp);
+            var node = new NewNode(new Point(new Coordinate(0.01, 0.01))) { Name = "new_node" };
+            //Act
+            var resp = await _mapRepo.AddNode(node);
+            //Assert
+            resp.Should().NotBeEmpty();
+        }
+
+        [Fact]
+        public async Task MapRepoIntegrationTest_AddWay_ReturnSuccess()
+        {
+            //Arrange
+            var nodes_ids = new List<Guid>();
+
+            var node = new NewNode(new Point(new Coordinate(0.015, 0.01))) { Name = "new_node" };
+            var id = await _mapRepo.AddNode(node);
+            nodes_ids.Add(id);
+
+            node = new NewNode(new Point(new Coordinate(0.01, 0.015))) { Name = "new_node" };
+            var id_2 = await _mapRepo.AddNode(node);
+            nodes_ids.Add(id);
+
+            var nodes = new List<Node>();
+            nodes.Add(new NewNode(new Point(new Coordinate(0.01, 0.01))) { Name = "new_node" });
+            nodes.Add(new NodeToReference(id));
+            nodes.Add(new NodeToReference(id_2));
+            nodes.Add(new NewNode(new Point(new Coordinate(0.01, 0.01))) { Name = "new_node" });
+            var wayName = "TestWay";
 
             //Act
-            Func<Task<FeatureCollection>> response = async () =>  await mapRepo.GetMapPart(0.01f, 0, -1, 1, -10);
+            var resp = await _mapRepo.AddWay(nodes, wayName);
 
+            //Assert
+            resp.Should().NotBeEmpty();;
+        }
+
+        [Fact]
+        public async Task MapRepoIntegrationTest_GetMapPart_ReturnSuccess()
+        {
+            //Arrange
+            float minLat = 0;
+            float maxLat = 0.01f;
+            float minLng = -1;
+            float maxLng = 1;
+            int zoom = 10;
+            //Act
+            var response = await _mapRepo.GetMapPart(minLat, maxLat, minLng, maxLng, zoom);
+            //Assert
+            response.Should().NotBeNull();
+            response.Should().BeOfType<FeatureCollection>();
+        }
+
+        [Fact]
+        public async Task MapRepoIntegrationTest_GetMapPart_InvertedEnvelopeReturnSuccess()
+        {
+            //Arrange
+            float minLat = 0;
+            float maxLat = 0.01f;
+            float minLng = 1;
+            float maxLng = -1;
+            int zoom = 10;
+            //Act
+            var response = await _mapRepo.GetMapPart(minLat, maxLat, minLng, maxLng, zoom);
+            //Assert
+            response.Should().NotBeNull();
+            response.Should().BeOfType<FeatureCollection>();
+        }
+
+        [Fact]
+        public async Task MapRepoIntegrationTest_GetMapPart_ZoomOutOfRangeThrowError()
+        {
+            //Arrange
+            float minLat = 0;
+            float maxLat = 0.01f;
+            float minLng = -1;
+            float maxLng = 1;
+            int zoom = -10;
+            //Act
+            Func<Task> response = async () => await _mapRepo.GetMapPart(minLat, maxLat, minLng, maxLng, zoom);
             //Assert
             response.Should().ThrowAsync<ArgumentException>();
-        }
-
-        [Fact]
-        public async Task MapRepoTest_GetMapPart_ReturnSuccess()
-        {
-            //Arrange
-            var sql = GeoJsonMockData(out FeatureCollection targetResp, out Dictionary<string, string> param, out List<GeojsonDTO> dbResp);
-            var mapRepo = MockMapRepo(sql, param, dbResp);
-
-            //Act
-            var response = await mapRepo.GetMapPart(0.01f, 0, -1, 1, 10);
-
-            //Assert
-            response.Should().BeEquivalentTo(targetResp);
-        }
-
-        public static string GeoJsonMockData(out FeatureCollection target, out Dictionary<string, string> param, out List<GeojsonDTO> dbResp)
-        {
-            string sql = """
-                                SELECT jsonb_build_object
-                (
-                	'type', 'FeatureCollection',
-                	'features', jsonb_agg
-                	(
-                		to_jsonb(objects)
-                	)
-                ) as resp
-                FROM 
-                (	
-                	SELECT 
-                		'Feature'as type, 
-                		ST_AsGeoJSON(ST_MakePolygon(ST_MakeLine(n.geom::geometry ORDER BY wn.sequence_id ASC))::geography)::jsonb as geometry, 
-                		jsonb_object_agg(wt.k, wt.v) as properties
-                	FROM Ways w 
-                	LEFT JOIN WaysNodes wn ON wn.way_id = w.id 
-                	LEFT JOIN Nodes n ON n.id = wn.node_id 
-                	LEFT JOIN WaysTags wt ON wt.way_id = w.id
-                	WHERE EXISTS 
-                	(
-                		SELECT 1 FROM WaysNodes wn 
-                		JOIN Nodes n ON n.id = wn.node_id 
-                		WHERE 
-                			wn.way_id = w.id AND 
-                			geom::geometry && ST_MakeEnvelope(@maxLat, @minLat, @maxLng, @minLng, 4326)
-                	)
-                	GROUP BY w.id
-                ) objects
-                """;
-            param = new()
-            {
-                { "minLat", "0" },
-                { "maxLat", "0,01" },
-                { "minLng", "-1" },
-                { "maxLng", "1" }
-            };
-
-            var rawResp = "{\"type\": \"FeatureCollection\", \"features\": [{\"type\": \"Feature\", \"geometry\": {\"type\": \"Polygon\", \"coordinates\": [[[0, 0], [0, 0], [0.01, 0.01], [0.01, 0.01], [0.02, 0.01], [0.02, 0.01], [0, 0], [0, 0]]]}, \"properties\": {\"ele\": \"50\", \"natural\": \"water\"}}]}";
-            dbResp =[new GeojsonDTO {Resp = rawResp}];
-
-            var GJReader = new GeoJsonReader();
-            target = GJReader.Read<FeatureCollection>(rawResp);
-            return sql;
-        }
-    
-        public static MapRepo MockMapRepo(string sql, Dictionary<string, string> param, List<GeojsonDTO> dbResp)
-        {
-            var mockDBHandler = new Mock<IDBHandler>();
-
-            mockDBHandler.Setup(db => db.MakeQuery<GeojsonDTO>(sql, param)).ReturnsAsync(dbResp);
-            var mockLogger = new Mock<ILogger>();
-
-            var mapRepo = new MapRepo(mockDBHandler.Object, mockLogger.Object);
-            return mapRepo;
         }
     }
 }

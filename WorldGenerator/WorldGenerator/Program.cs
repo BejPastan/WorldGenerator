@@ -21,7 +21,7 @@ builder.Services.AddCors(options =>
 });
 
 // Add services to the container.
-builder.Services.AddSingleton<ISecretRepo, LocalSecretRepo>();
+builder.Services.AddSingleton<IDBConnectionFactory, LocalSecretRepo>();
 builder.Services.AddSingleton<IDBHandler, DBController>();
 
 builder.Services.AddScoped<IMapRepo, MapRepo>();

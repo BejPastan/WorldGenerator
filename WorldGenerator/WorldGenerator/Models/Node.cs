@@ -9,11 +9,11 @@ namespace WorldGenerator.Models
     /// </summary>
     public class Node
     {
-        public string? Id { get; set; } = null;
-        public string? Name { get; set; } = null;
-        public string? TileId { get; set; } = null;
+        public virtual Guid? Id { get; set; } = null;
+        public virtual string? Name { get; set; } = null;
+        public virtual string? TileId { get; set; } = null;
         [Column(TypeName = "geography")]
-        public Point? Geom { get; set; } = null;
+        public virtual Point? Geom { get; set; } = null;
     }
 
     /// <summary>
@@ -21,17 +21,24 @@ namespace WorldGenerator.Models
     /// </summary>
     public class NewNode(Point point) : Node
     {
-        new public string Name { get; set; } = string.Empty;
-        new public Point Geom { get; set; } = point;
-
-
+        public override string Name { get; set; } = string.Empty;
+        public override Point Geom { get; set; } = point;
     }
 
     /// <summary>
     /// Class used for adding new ways, as existing node
     /// </summary>
-    public class ExistingNode(string id) : Node
+    public class NodeToReference : Node
     {
-        new public string Id { get; set; } = id;
+        public NodeToReference(Guid id)
+        {
+            if(id == null || id == Guid.Empty)
+            {
+                throw new ArgumentException("Id cannot be null or empty", nameof(id));
+            }
+            Id = id;
+        }
+
+        public override Guid? Id { get; set; }//I want this to cannot be null
     }
 }

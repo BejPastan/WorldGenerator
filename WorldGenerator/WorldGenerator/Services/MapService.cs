@@ -10,7 +10,7 @@ namespace WorldGenerator.Services
         readonly ILogger _logger = logger;
         readonly IMapRepo _mapRepo = mapRepo;
 
-        public Task<string> AddWay(List<Node> nodes, string wayName)
+        public Task<Guid> AddWay(List<Node> nodes, string wayName)
         {
             return _mapRepo.AddWay(nodes, wayName);
         }

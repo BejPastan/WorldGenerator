@@ -6,9 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>6a2b7182-d952-414f-b99c-dc5e8823b513</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\SQL\AddWayToMap.sql" />
     <None Remove="Resources\SQL\GetMapGeojson.sql" />
   </ItemGroup>
 
@@ -24,7 +26,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\SQL\AddWayToMap.sql" />
     <EmbeddedResource Include="Resources\SQL\GetMapGeojson.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Resources\Python\" />
   </ItemGroup>
 
 </Project>
