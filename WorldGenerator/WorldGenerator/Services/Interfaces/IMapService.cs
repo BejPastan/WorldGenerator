@@ -16,8 +16,14 @@ namespace WorldGenerator.Services.Interfaces
         /// <returns></returns>
         Task<FeatureCollection> GetMapPart(float minLat, float maxLat, float minLng, float maxLng, int zoom);
 
-        //inserting nodes
-
+        #region inserting nodes
+        /// <summary>
+        /// Add nodes and return list of their ids
+        /// </summary>
+        /// <param name="nodes"></param>
+        /// <returns></returns>
+        public Task<List<Guid>> AddNodesBatch(List<NewNode> nodes);
+        #endregion
         //adding Ways
         /// <summary>
         /// Add new Way from list of nodes
@@ -26,6 +32,11 @@ namespace WorldGenerator.Services.Interfaces
         /// <returns></returns>
         Task<Guid> AddWay(List<Node> nodes, string wayName);
 
-        //adding tags
+        /// <summary>
+        /// Add ways and return list of their ids
+        /// </summary>
+        /// <param name="ways">List of new ways to add, with ids of nodes</param>
+        /// <returns></returns>
+        Task<List<Guid>> AddWaysBatch(List<NewWay> ways);
     }
 }

@@ -9,9 +9,10 @@ using WorldGenerator.Utils;
 
 namespace WorldGenerator.Services
 {
-    public class MapGenerator(IPythonFeatcher featcher) : IMapGenerator
+    public class MapGenerator(IPythonFeatcher featcher, IMapService mapService) : IMapGenerator
     {
         IPythonFeatcher _fetcher = featcher;
+        IMapService _mapService = mapService;
 
         /// <summary>
         /// Generate set of polygons, and divide them into plates
@@ -21,7 +22,7 @@ namespace WorldGenerator.Services
         /// <param name="planetSize"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public Task<FeatureCollection> GenerateTectonicPlates(int platesNum, int segmentNum, float planetSize)
+        public async Task<FeatureCollection> GenerateTectonicPlates(int platesNum, int segmentNum, float planetSize)
         {
             Func<dynamic, PlateGenerationResult> generatePoints = (dynamic pyModule) =>
             {
@@ -34,16 +35,16 @@ namespace WorldGenerator.Services
                 regionPoints.Dispose();
                 dynamic voronoi = pyModule.generate_voronoi(points, planetSize);
 
-                dynamic regions = voronoi["regions"];
-                dynamic vertices = voronoi["vertices"];
-                dynamic counts = voronoi["region_counts"];
+                dynamic regions = voronoi["regions"];//indices of cells
+                dynamic vertices = voronoi["vertices"];//all vertices of all regions
+                dynamic counts = voronoi["region_counts"];//list of number of vertices in each region
 
                 long platesIdsPtr = pointsToRegions.ctypes.data;
                 int platesLength = pointsToRegions.size;
                 long verticesPtr = vertices.ctypes.data;
                 int verticesLength = vertices.size;
-                long regionsPtr = vertices.ctypes.data;
-                int regionsLength = vertices.size;
+                long regionsPtr = regions.ctypes.data;
+                int regionsLength = regions.size;
                 long countsPtr = vertices.ctypes.data;
                 int countsLength = vertices.size;
 
@@ -63,29 +64,42 @@ namespace WorldGenerator.Services
             //Generate points
             PlateGenerationResult pointsData = _fetcher.ExecuteModule("PlateGeneration", generatePoints);
 
-            //var regionsPy = pointsData[1].regions;
-            //Int64[] regions = regionsPy.GetItem(0);
+            //list of all generated points
 
-            //long verticesPtr = vertices.ctypes.data;
-            //int verticesLength = vertices.count;
+            int totalPoints = pointsData.verticesLength / 2;
 
             #region adding points
-            unsafe
-            {
-                ReadOnlySpan<float> vSpan = new ReadOnlySpan<float>(pointsData.verticesPtr, pointsData.verticesLength);
 
-                //multuplying by 2 to get all 2 vertices of point
-                for(int i = 0; i< pointsData.verticesLength; i+=Constants.PLATE_INPUT_BATCH*2)
+                
+
+                //multiplying by 2 to get all 2 vertices of point
+            List<Guid> pointsIds = new List<Guid>();
+            for (int i = 0; i< totalPoints; i+=Constants.PLATE_INPUT_BATCH*2)
+            {
+                List<NewNode> nodes = new List<NewNode>();
+                unsafe
                 {
-                    ReadOnlySpan<float> slice = vSpan.Slice(i, Constants.PLATE_INPUT_BATCH*2);
-                    List<Point> features = [];
+                    ReadOnlySpan<float> vSpan = new ReadOnlySpan<float>((void*)pointsData.verticesPtr, totalPoints);
+                    ReadOnlySpan<float> slice = vSpan.Slice(i, Constants.PLATE_INPUT_BATCH * 2);
                     for(int j =0; j< slice.Length; j+=2)
                     {
-                        features.Add(new Point(slice[j], slice[j + 1]));
+                        nodes.Add(new NewNode(new Point(slice[j], slice[j + 1])));
                     }
+                    //save points to database
                 }
+                List<Guid> ids = await _mapService.AddNodesBatch(nodes);
+                pointsIds.AddRange(ids);
             }
             #endregion
+            //adding ways
+            //for
+
+            //adding relations
+
+            //adding tags to ways
+
+            //adding tags to relations
+
 
             return null;
         }

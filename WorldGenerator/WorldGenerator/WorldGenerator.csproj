@@ -13,6 +13,8 @@
   <ItemGroup>
     <None Remove="Resources\Python\PlateGeneration.py" />
     <None Remove="Resources\SQL\AddBatchNodes.sql" />
+    <None Remove="Resources\SQL\AddBatchTags.sql" />
+    <None Remove="Resources\SQL\AddWaysToMapBatch.sql" />
     <None Remove="Resources\SQL\AddWayToMap.sql" />
     <None Remove="Resources\SQL\GetMapGeojson.sql" />
   </ItemGroup>
@@ -32,6 +34,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\Python\PlateGeneration.py" />
     <EmbeddedResource Include="Resources\SQL\AddBatchNodes.sql" />
+    <EmbeddedResource Include="Resources\SQL\AddBatchTags.sql" />
+    <EmbeddedResource Include="Resources\SQL\AddWaysToMapBatch.sql" />
     <EmbeddedResource Include="Resources\SQL\AddWayToMap.sql" />
     <EmbeddedResource Include="Resources\SQL\GetMapGeojson.sql" />
   </ItemGroup>

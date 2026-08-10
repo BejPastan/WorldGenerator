@@ -64,6 +64,9 @@ def generate_voronoi(points:np.ndarray, sphereSize:float)-> spatial.SphericalVor
 
     Returns:
         list: A list of Voronoi cells, each represented as a list of points.
+        vertices (list): A list of vertices of the Voronoi cells.
+        region_counts (list): A list of the number of vertices in each Voronoi cell.
+        regions (list): A list of the indices of the vertices that make up each Voronoi cell.
     """
     voronoi = spatial.SphericalVoronoi(points, radius=sphereSize, center=[0, 0, 0], threshold=1e-6)
     vertices = voronoi.vertices

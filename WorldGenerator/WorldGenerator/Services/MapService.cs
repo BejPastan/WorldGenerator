@@ -10,9 +10,19 @@ namespace WorldGenerator.Services
         readonly ILogger _logger = logger;
         readonly IMapRepo _mapRepo = mapRepo;
 
-        public Task<Guid> AddWay(List<Node> nodes, string wayName)
+        public async Task<List<Guid>> AddNodesBatch(List<NewNode> nodes)
         {
-            return _mapRepo.AddWay(nodes, wayName);
+            return await _mapRepo.AddNodesBatch(nodes);
+        }
+
+        public async Task<Guid> AddWay(List<Node> nodes, string wayName)
+        {
+            return await _mapRepo.AddWay(nodes, wayName);
+        }
+
+        public async Task<List<Guid>> AddWaysBatch(List<NewWay> ways)
+        {
+            return await _mapRepo.AddWaysBatch(ways);
         }
 
         public async Task<FeatureCollection> GetMapPart(float minLat, float maxLat, float minLng, float maxLng, int zoom)

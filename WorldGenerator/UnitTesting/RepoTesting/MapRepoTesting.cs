@@ -75,6 +75,21 @@ namespace UnitTesting.RepoTesting
         }
 
         [Fact]
+        public async Task MapRepoIntegrationTest_AddNodesBatch_ReturnSuccess()
+        {
+            //Arrange
+            var nodes = new List<NewNode>();
+            nodes.Add(new NewNode(new Point(new Coordinate(0.01, 0.01))) { Name = "new_node" });
+            nodes.Add(new NewNode(new Point(new Coordinate(0.015, 0.01))) { Name = "new_node" });
+            nodes.Add(new NewNode(new Point(new Coordinate(0.01, 0.015))) { Name = "new_node" });
+            //Act
+            var resp = await _mapRepo.AddNodesBatch(nodes);
+            //Assert
+            resp.Should().NotBeEmpty();
+            resp.Count.Should().Be(nodes.Count);
+        }
+
+        [Fact]
         public async Task MapRepoIntegrationTest_GetMapPart_ReturnSuccess()
         {
             //Arrange
@@ -119,6 +134,31 @@ namespace UnitTesting.RepoTesting
             Func<Task> response = async () => await _mapRepo.GetMapPart(minLat, maxLat, minLng, maxLng, zoom);
             //Assert
             response.Should().ThrowAsync<ArgumentException>();
+        }
+
+        [Fact]
+        public async Task MapRepoIntegrationTest_AddWaysBatch_ReturnSuccess()
+        {
+            //Arrange
+            var nodes_ids = new List<Guid>();
+            var node = new NewNode(new Point(new Coordinate(0.015, 0.01))) { Name = "new_node" };
+            var id = await _mapRepo.AddNode(node);
+            nodes_ids.Add(id);
+            node = new NewNode(new Point(new Coordinate(0.01, 0.015))) { Name = "new_node" };
+            var id_2 = await _mapRepo.AddNode(node);
+            nodes_ids.Add(id);
+            var ways = new List<NewWay>();
+            var wayName = "TestWay";
+            ways.Add(new NewWay()
+            {
+                Nodes_Ids = nodes_ids,
+                Name = wayName
+            });
+            //Act
+            var resp = await _mapRepo.AddWaysBatch(ways);
+            //Assert
+            resp.Should().NotBeEmpty();
+            resp.Count.Should().Be(ways.Count);
         }
     }
 }

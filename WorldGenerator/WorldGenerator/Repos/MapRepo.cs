@@ -2,7 +2,6 @@
 using NetTopologySuite.Features;
 using NetTopologySuite.IO;
 using NetTopologySuite.IO.Converters;
-using System.Drawing;
 using System.Text.Json;
 using WorldGenerator.Models;
 using WorldGenerator.Repos.Interfaces;
@@ -29,7 +28,7 @@ namespace WorldGenerator.Repos
         readonly ILogger _logger;
         readonly JsonSerializerOptions _options;
 
-
+        /// <inheritdoc/>
         public async Task<Guid> AddWay(List<Node> nodes, string wayName)
         {
             #region setting converter
@@ -57,7 +56,7 @@ namespace WorldGenerator.Repos
             }
         }
 
-
+        /// <inheritdoc/>
         public async Task<FeatureCollection> GetMapPart(float minLat, float maxLat, float minLng, float maxLng, int zoom)
         {
             if (zoom < Constants.MIN_ZOOM || zoom > Constants.MAX_ZOOM)
@@ -84,14 +83,15 @@ namespace WorldGenerator.Repos
             var result = resp.FirstOrDefault();
             if(result == null)
             {
-                _logger.LogInformation("Return Empty Map");
+                _logger.LogInformation("Returned Empty Map");
                 result = new();
             }
             var GJReader = new GeoJsonReader();
             var mapPart = GJReader.Read<FeatureCollection>(result.Resp);
             return mapPart;
         }
-
+        
+        /// <inheritdoc/>
         public async Task<Guid> AddNode(NewNode node)
         {
             var sql = """
@@ -104,16 +104,35 @@ namespace WorldGenerator.Repos
 
             var resp = await _db.MakeQuery<Guid>(sql, param);
             var result = resp.FirstOrDefault();
-            if (result == null)
+            if (result == Guid.Empty)
             {
                 throw new Exception("Error ocured when adding new node");
             }
             return result;
         }
 
+        /// <inheritdoc/>
         public async Task<List<Guid>> AddNodesBatch(List<NewNode> nodes)
         {
+            var sql = new Lazy<string>(() => SqlLoader.Load("AddBatchNodes.sql"));
+            var param = new DynamicParameters();
+            var json = JsonSerializer.Serialize(nodes, _options);
+            param.Add("objects_array", json);
+            var nodesIds = await _db.MakeQuery<Guid>(sql.Value, param);
+            var result = nodesIds.ToList();
+            return result;
+        }
 
+        /// <inheritdoc/>
+        public async Task<List<Guid>> AddWaysBatch(List<NewWay> ways)
+        {
+            var sql = new Lazy<string>(() => SqlLoader.Load("AddWaysToMapBatch.sql"));
+            var param = new DynamicParameters();
+            var json = JsonSerializer.Serialize(ways, _options);
+            param.Add("objects_array", json);
+            var nodesIds = await _db.MakeQuery<Guid>(sql.Value, param);
+            var result = nodesIds.ToList();
+            return result;
         }
     }
 }

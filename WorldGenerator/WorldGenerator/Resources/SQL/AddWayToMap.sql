@@ -31,21 +31,22 @@ inserted_nodes AS
 (
 	INSERT INTO Nodes(geom, name)
 	SELECT new_geom::geography, new_name FROM grouped WHERE existing_id IS NULL ORDER BY group_id
-	RETURNING id
+	RETURNING id, name, geom
 ),
 inserted_nodes_with_groups AS
 (
-		SELECT ins.id as new_id, gr.group_id as group_id, gr.new_name as new_name, gr.new_geom as new_geom, gr.existing_id as existing_id FROM 
-		(
-			SELECT inserted_nodes.*, row_number() over () as rn 
-			FROM inserted_nodes
-		) ins
-		JOIN 
-		(
-			SELECT grouped.*, row_number() over (ORDER BY group_id) as rn 
-			FROM grouped WHERE existing_id IS NULL
-		) gr 
-		ON gr.rn = ins.rn
+		SELECT 
+			ins.id as new_id, 
+			gr.group_id as group_id, 
+			gr.new_name as new_name, 
+			gr.new_geom as new_geom, 
+			gr.existing_id as existing_id 
+		FROM inserted_nodes ins
+		JOIN grouped
+		ON 
+			grouped.new_name = ins.name 
+			AND grouped.new_geom:geography = ins.geom
+		WHERE grouped.existing_id IS NULL
 ),
 ungrouped_with_ids AS 
 (
@@ -57,6 +58,7 @@ SELECT inserted_way.id, col.id, col.sequence_id
 FROM inserted_way, ungrouped_with_ids col
 Order BY sequence_id
 RETURNING id, way_id, node_id, sequence_id
+
 
 -- example of input object
 --			'[

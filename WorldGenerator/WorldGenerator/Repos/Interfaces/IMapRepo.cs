@@ -35,11 +35,18 @@ namespace WorldGenerator.Repos.Interfaces
         Task<Guid> AddNode(NewNode node);
 
         /// <summary>
-        /// 
+        /// Add nodes and return list of their ids
         /// </summary>
         /// <param name="nodes"></param>
         /// <returns></returns>
-        public async Task<List<Guid>> AddNodesBatch(List<NewNode> nodes)
+        public Task<List<Guid>> AddNodesBatch(List<NewNode> nodes);
+
+        /// <summary>
+        /// Add ways and return list of their ids
+        /// </summary>
+        /// <param name="ways">List of new ways to add, with ids of nodes</param>
+        /// <returns></returns>
+        public Task<List<Guid>> AddWaysBatch(List<NewWay> ways);
         #endregion
     }
 }
