@@ -33,6 +33,13 @@ namespace WorldGenerator.Repos.Interfaces
         /// <param name="node"></param>
         /// <returns></returns>
         Task<Guid> AddNode(NewNode node);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="nodes"></param>
+        /// <returns></returns>
+        public async Task<List<Guid>> AddNodesBatch(List<NewNode> nodes)
         #endregion
     }
 }

@@ -19,6 +19,7 @@ namespace WorldGenerator.Utils
             dataSource = NpgsqlDataSource.Create(CONNECTION_STRING);
             _logger = logger;
             _logger.LogInformation("DB data source created");
+            Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
         }
 
         public async Task<IEnumerable<T>> MakeQuery<T>(string query, DynamicParameters parameters)

@@ -32,13 +32,13 @@ namespace WorldGenerator.Models
     {
         public NodeToReference(Guid id)
         {
-            if(id == null || id == Guid.Empty)
+            if(id == Guid.Empty)
             {
-                throw new ArgumentException("Id cannot be null or empty", nameof(id));
+                throw new ArgumentException("Id cannot be empty", nameof(id));
             }
             Id = id;
         }
 
-        public override Guid? Id { get; set; }//I want this to cannot be null
+        public override Guid? Id { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 using NetTopologySuite.Features;
 using NetTopologySuite.IO;
 using NetTopologySuite.IO.Converters;
+using System.Drawing;
 using System.Text.Json;
 using WorldGenerator.Models;
 using WorldGenerator.Repos.Interfaces;
@@ -108,6 +109,11 @@ namespace WorldGenerator.Repos
                 throw new Exception("Error ocured when adding new node");
             }
             return result;
+        }
+
+        public async Task<List<Guid>> AddNodesBatch(List<NewNode> nodes)
+        {
+
         }
     }
 }
