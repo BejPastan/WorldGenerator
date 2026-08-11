@@ -42,11 +42,11 @@ inserted_nodes_with_groups AS
 			gr.new_geom as new_geom, 
 			gr.existing_id as existing_id 
 		FROM inserted_nodes ins
-		JOIN grouped
+		JOIN grouped gr
 		ON 
-			grouped.new_name = ins.name 
-			AND grouped.new_geom:geography = ins.geom
-		WHERE grouped.existing_id IS NULL
+			gr.new_name = ins.name 
+			AND gr.new_geom::geography = ins.geom
+		WHERE gr.existing_id IS NULL
 ),
 ungrouped_with_ids AS 
 (

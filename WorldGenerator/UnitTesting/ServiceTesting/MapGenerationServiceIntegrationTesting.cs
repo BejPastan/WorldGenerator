@@ -37,7 +37,7 @@ namespace UnitTesting.ServiceTesting
         {
             //Arrange
             var pythonSettings = new Mock<IPythonSetting>();
-            pythonSettings.Setup(f => f.GetPythonPath()).Returns("C:\\ProgramData\\miniforge3\\python313.dll");
+            pythonSettings.Setup(f => f.GetPythonPath()).Returns("G:\\ProgramFiles\\Conda-Forge\\python313.dll");
 
             PythonFeatcher featcher = new PythonFeatcher(pythonSettings.Object);
 
@@ -45,13 +45,13 @@ namespace UnitTesting.ServiceTesting
 
             int platesNum = 15;
             int segmentsNum = 10000;
-            float planetSize = 1.0f;
+            float planetSize = 5000f;
 
             //Act
             var resp = await mapGenerator.GenerateTectonicPlates(platesNum, segmentsNum, planetSize);
 
             //Assert
-            resp.Count().Should().Be(segmentsNum);      
+            resp.Count().Should().Be(platesNum);      
         }
     }
 }

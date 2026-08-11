@@ -50,20 +50,14 @@ namespace UnitTesting.RepoTesting
         public async Task MapRepoIntegrationTest_AddWay_ReturnSuccess()
         {
             //Arrange
-            var nodes_ids = new List<Guid>();
+            var nodes_ids = await AddTestNodes(2);
 
-            var node = new NewNode(new Point(new Coordinate(0.015, 0.01))) { Name = "new_node" };
-            var id = await _mapRepo.AddNode(node);
-            nodes_ids.Add(id);
 
-            node = new NewNode(new Point(new Coordinate(0.01, 0.015))) { Name = "new_node" };
-            var id_2 = await _mapRepo.AddNode(node);
-            nodes_ids.Add(id);
 
             var nodes = new List<Node>();
             nodes.Add(new NewNode(new Point(new Coordinate(0.01, 0.01))) { Name = "new_node" });
-            nodes.Add(new NodeToReference(id));
-            nodes.Add(new NodeToReference(id_2));
+            nodes.Add(new NodeToReference(nodes_ids[0]));
+            nodes.Add(new NodeToReference(nodes_ids[1]));
             nodes.Add(new NewNode(new Point(new Coordinate(0.01, 0.01))) { Name = "new_node" });
             var wayName = "TestWay";
 
@@ -71,7 +65,7 @@ namespace UnitTesting.RepoTesting
             var resp = await _mapRepo.AddWay(nodes, wayName);
 
             //Assert
-            resp.Should().NotBeEmpty();;
+            resp.Should().NotBeEmpty(); ;
         }
 
         [Fact]
@@ -140,13 +134,7 @@ namespace UnitTesting.RepoTesting
         public async Task MapRepoIntegrationTest_AddWaysBatch_ReturnSuccess()
         {
             //Arrange
-            var nodes_ids = new List<Guid>();
-            var node = new NewNode(new Point(new Coordinate(0.015, 0.01))) { Name = "new_node" };
-            var id = await _mapRepo.AddNode(node);
-            nodes_ids.Add(id);
-            node = new NewNode(new Point(new Coordinate(0.01, 0.015))) { Name = "new_node" };
-            var id_2 = await _mapRepo.AddNode(node);
-            nodes_ids.Add(id);
+            var nodes_ids = await AddTestNodes(2);
             var ways = new List<NewWay>();
             var wayName = "TestWay";
             ways.Add(new NewWay()
@@ -159,6 +147,74 @@ namespace UnitTesting.RepoTesting
             //Assert
             resp.Should().NotBeEmpty();
             resp.Count.Should().Be(ways.Count);
+        }
+
+        [Fact]
+        public async Task MapRepoIntegrationTest_AddRelationsBatch_ReturnSuccess()
+        {
+            //Arrange
+            var ways_ids = await AddTestWays(2);
+            var relations = new List<NewRelation>();
+            var elements = new List<NewRelationElement>();
+            foreach (var wayId in ways_ids)
+            {
+                elements.Add(new NewRelationElement()
+                {
+                    Way_Id = wayId,
+                    Type = true
+                });
+            }
+            var relationName = "TestRelation";
+            relations.Add(new NewRelation()
+            {
+                Elements = elements,
+                Name = relationName
+            });
+            //Act
+            var resp = await _mapRepo.AddRelationsBatch(relations);
+            //Assert
+            resp.Should().NotBeEmpty();
+            resp.Count.Should().Be(relations.Count);
+        }
+
+        /// <summary>
+        /// Add test nodes to the database and return their ids
+        /// </summary>
+        /// <param name="num"></param>
+        /// <returns></returns>
+        private async Task<List<Guid>> AddTestNodes(int num)
+        {
+            List<Guid> ids = new List<Guid>();
+            for (int i = 0; i < num; i++)
+            {
+                var node = new NewNode(new Point(new Coordinate(0.01, 0.01))) { Name = "new_node" };
+                var resp = await _mapRepo.AddNode(node);
+                ids.Add(resp);
+            }
+            return ids;
+        }
+
+        /// <summary>
+        /// Add few test ways to the database and return their ids. Each way will consist of 3 nodes. and is closed polygon
+        /// </summary>
+        /// <param name="num"></param>
+        /// <returns></returns>
+        private async Task<List<Guid>> AddTestWays(int num)
+        {
+            List<Guid> ids = new List<Guid>();
+            for (int i = 0; i < num; i++)
+            {
+                var nodes_ids = await AddTestNodes(3);
+                var nodes = new List<Node>();
+                nodes.Add(new NodeToReference(nodes_ids[0]));
+                nodes.Add(new NodeToReference(nodes_ids[1]));
+                nodes.Add(new NodeToReference(nodes_ids[2]));
+                nodes.Add(new NodeToReference(nodes_ids[0]));
+                var wayName = $"TestWay_{i}";
+                var resp = await _mapRepo.AddWay(nodes, wayName);
+                ids.Add(resp);
+            }
+            return ids;
         }
     }
 }

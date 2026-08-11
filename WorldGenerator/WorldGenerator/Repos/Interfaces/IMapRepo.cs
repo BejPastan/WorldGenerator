@@ -41,12 +41,19 @@ namespace WorldGenerator.Repos.Interfaces
         /// <returns></returns>
         public Task<List<Guid>> AddNodesBatch(List<NewNode> nodes);
 
+        #endregion
+
+        #region Ways Operations
         /// <summary>
         /// Add ways and return list of their ids
         /// </summary>
         /// <param name="ways">List of new ways to add, with ids of nodes</param>
         /// <returns></returns>
         public Task<List<Guid>> AddWaysBatch(List<NewWay> ways);
+        #endregion
+
+        #region Relation Operations
+        public Task<List<Guid>> AddRelationsBatch(List<NewRelation> relations);
         #endregion
     }
 }

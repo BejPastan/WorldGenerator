@@ -15,6 +15,11 @@ namespace WorldGenerator.Services
             return await _mapRepo.AddNodesBatch(nodes);
         }
 
+        public async Task<List<Guid>> AddRelationsBatch(List<NewRelation> relations)
+        {
+            return await _mapRepo.AddRelationsBatch(relations);
+        }
+
         public async Task<Guid> AddWay(List<Node> nodes, string wayName)
         {
             return await _mapRepo.AddWay(nodes, wayName);

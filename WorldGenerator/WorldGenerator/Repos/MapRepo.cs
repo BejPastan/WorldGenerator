@@ -130,8 +130,19 @@ namespace WorldGenerator.Repos
             var param = new DynamicParameters();
             var json = JsonSerializer.Serialize(ways, _options);
             param.Add("objects_array", json);
-            var nodesIds = await _db.MakeQuery<Guid>(sql.Value, param);
-            var result = nodesIds.ToList();
+            var waysIds = await _db.MakeQuery<Guid>(sql.Value, param);
+            var result = waysIds.ToList();
+            return result;
+        }
+
+        public async Task<List<Guid>> AddRelationsBatch(List<NewRelation> relations)
+        {
+            var sql = new Lazy<string>(() => SqlLoader.Load("AddRelationsBatch.sql"));
+            var param = new DynamicParameters();
+            var json = JsonSerializer.Serialize(relations, _options);
+            param.Add("objects_array", json);
+            var relationsIds = await  _db.MakeQuery<Guid>(sql.Value, param);
+            var result = relationsIds.ToList();
             return result;
         }
     }

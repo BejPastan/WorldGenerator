@@ -18,7 +18,10 @@ namespace WorldGenerator.Repos
             using(Py.GIL())
             {
                 dynamic sys = Py.Import("sys");
-                sys.path.append($"{AppDomain.CurrentDomain.BaseDirectory}/Resources/Python");
+                string pythonFolderPath = Path.GetFullPath(
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Python")
+                );
+                sys.path.append(pythonFolderPath);
             }
             _gilTs = PythonEngine.BeginAllowThreads();
         }

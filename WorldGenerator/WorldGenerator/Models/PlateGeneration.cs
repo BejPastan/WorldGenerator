@@ -1,4 +1,6 @@
-﻿namespace WorldGenerator.Models
+﻿using Python.Runtime;
+
+namespace WorldGenerator.Models
 {
     /// <summary>
     /// Result of plate generation, containing pointers and lengths for plates, vertices, regions, and counts.
@@ -37,5 +39,10 @@
         /// length of list with sizes(number of nodes) of each small region
         /// </summary>
         public int countsLength;
+
+        public PyObject plates;
+        public PyObject vertices;
+        public PyObject regions;
+        public PyObject regionsCounts;
     }
 }
