@@ -51,7 +51,7 @@ namespace UnitTesting.ServiceTesting
             var resp = await mapGenerator.GenerateTectonicPlates(platesNum, segmentsNum, planetSize);
 
             //Assert
-            resp.Count().Should().Be(platesNum);      
+            resp.Count().Should().BeLessThanOrEqualTo(platesNum);
         }
     }
 }

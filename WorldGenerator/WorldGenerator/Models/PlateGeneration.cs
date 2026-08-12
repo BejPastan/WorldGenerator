@@ -45,4 +45,38 @@ namespace WorldGenerator.Models
         public PyObject regions;
         public PyObject regionsCounts;
     }
+
+    /// <summary>
+    /// Message sent to the client to indicate progress of map generation, containing the next state and percentage completed.
+    /// </summary>
+    public class ProgressMessage
+    {
+        /// <summary>
+        /// description of currently executing state, for example "Generating points", "Assigning points to regions", "Generating Voronoi diagram"
+        /// </summary>
+        public string nextState { get; set; }
+        /// <summary>
+        /// precent value of progress, from 0 to 1
+        /// </summary>
+        public float precent { get; set; }
+    }
+
+    /// <summary>
+    /// Request obejct for plate generation, containing the number of plates, number of segments, and planet size.
+    /// </summary>
+    public class PlateGenerationRequest
+    {
+        /// <summary>
+        /// Maxmium number of plates to generate, for example 10
+        /// </summary>
+        public int platesNum { get; set; }
+        /// <summary>
+        /// number of segments to generate, for example 1000, this segments are elemtn of plates
+        /// </summary>
+        public int segmentNum { get; set; }
+        /// <summary>
+        /// Size of planet in km
+        /// </summary>
+        public float planetSize { get; set; }
+    }
 }

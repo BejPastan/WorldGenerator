@@ -14,6 +14,8 @@ namespace WorldGenerator.Services
         IPythonFeatcher _fetcher = featcher;
         IMapService _mapService = mapService;
 
+        public delegate void ProgressEvent(ProgressMessage message, string connectionId);
+
         /// <summary>
         /// Generate set of polygons, and divide them into plates
         /// </summary>
@@ -22,17 +24,17 @@ namespace WorldGenerator.Services
         /// <param name="planetSize"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task<List<Guid>> GenerateTectonicPlates(int platesNum, int segmentNum, float planetSize)
+        public async Task<List<Guid>> GenerateTectonicPlates(int platesNum, int segmentNum, float planetSize, string connectionId)
         {
             Func<dynamic, PlateGenerationResult> generatePoints = (dynamic pyModule) =>
             {
                 PyObject points = pyModule.generate_uniform_points_on_sphere(segmentNum, planetSize, 0);//generating segments points
-                //here insert callback?
+                progressMessage?.Invoke(new ProgressMessage { nextState = "Generating plates points", precent = 0.20f }, connectionId);
                 PyObject regionPoints = pyModule.generate_random_points_on_sphere(platesNum, planetSize);//generating plates points
-                //here insert callback?
+                progressMessage?.Invoke(new ProgressMessage { nextState = "Assigning segments to plates", precent = 0.30f }, connectionId);
                 dynamic pointsToRegions = pyModule.assign_points_to_regions(points, regionPoints);//assigning segments to plates
                 regionPoints.Dispose();
-                //here insert callback?
+                progressMessage?.Invoke(new ProgressMessage { nextState = "generating segments borders", precent = 0.50f }, connectionId);
                 dynamic voronoi = pyModule.generate_voronoi(points, planetSize);
                 points.Dispose();
 
@@ -68,14 +70,10 @@ namespace WorldGenerator.Services
                 };
             };
 
-            Func<dynamic, bool> freeVertices = (dynamic pyModule) =>
-            {
-                pyModule.free_memory();
-                return true;
-            };
-
             //Generate points
             PlateGenerationResult pointsData = _fetcher.ExecuteModule("PlateGeneration", generatePoints);
+
+            progressMessage?.Invoke(new ProgressMessage { nextState = "Saving segments", precent = 0.70f }, connectionId);
 
             //list of all generated points
 
@@ -114,6 +112,7 @@ namespace WorldGenerator.Services
             pointsData.vertices.Dispose();
             #endregion
             //adding ways
+            progressMessage?.Invoke(new ProgressMessage { nextState = "Savaing plates", precent = 0.90f }, connectionId);
 
             Dictionary<int, List<NewRelationElement>> regionToPlate = new Dictionary<int, List<NewRelationElement>>();
             for (int i = 0; i < platesNum; i++)
