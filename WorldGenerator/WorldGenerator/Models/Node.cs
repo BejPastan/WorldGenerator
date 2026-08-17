@@ -9,11 +9,30 @@ namespace WorldGenerator.Models
     /// </summary>
     public class Node
     {
+        /// <summary>
+        /// Id of Node
+        /// </summary>
         public virtual Guid? Id { get; set; } = null;
+        /// <summary>
+        /// Name of node
+        /// </summary>
         public virtual string? Name { get; set; } = null;
+        /// <summary>
+        /// Id of tile(readonly)
+        /// </summary>
         public virtual string? TileId { get; set; } = null;
+        /// <summary>
+        /// Geography data of point
+        /// </summary>
         [Column(TypeName = "geography")]
         public virtual Point? Geom { get; set; } = null;
+    }
+
+    public class UpdateNode(Guid id) : Node
+    {
+        public override Guid? Id { get; set; } = id;//how to force this to not be null?
+        public override string Name { get; set; } = string.Empty;
+        public override Point? Geom { get; set; } = null;
     }
 
     /// <summary>
@@ -40,5 +59,15 @@ namespace WorldGenerator.Models
         }
 
         public override Guid? Id { get; set; }
+    }
+
+    public class NodeExtended : Node
+    {
+        List<Tag> tags = new List<Tag>();
+    }
+
+    public class WayNode : Node
+    {
+        public int sequenceId {  get; set; }
     }
 }

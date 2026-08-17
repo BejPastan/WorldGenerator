@@ -15,6 +15,7 @@ namespace WorldGenerator.Services
         IMapService _mapService = mapService;
 
         public delegate void ProgressEvent(ProgressMessage message, string connectionId);
+        public event ProgressEvent progressMessage;
 
         /// <summary>
         /// Generate set of polygons, and divide them into plates
@@ -83,10 +84,10 @@ namespace WorldGenerator.Services
             #region adding points
 
             //multiplying by 2 to get all 2 vertices of point
-            List<Guid> pointsIds = new List<Guid>();
+            List<Guid> pointsIds = [];
             for (int i = 0; i< pointsData.verticesLength; i+=Constants.PLATE_INPUT_BATCH*2)
             {
-                List<NewNode> nodes = new List<NewNode>();
+                List<NewNode> nodes = [];
                 unsafe
                 {
                     ReadOnlySpan<double> vSpan = new ReadOnlySpan<double>((void*)pointsData.verticesPtr, pointsData.verticesLength);
@@ -117,11 +118,11 @@ namespace WorldGenerator.Services
             Dictionary<int, List<NewRelationElement>> regionToPlate = new Dictionary<int, List<NewRelationElement>>();
             for (int i = 0; i < platesNum; i++)
             {
-                regionToPlate.Add(i, new List<NewRelationElement>());
+                regionToPlate.Add(i, []);
             }
             for (int i =0; i< totalRegions; i+=Constants.PLATE_INPUT_BATCH)
             {
-                List<NewWay> ways = new List<NewWay>();
+                List<NewWay> ways = [];
                 unsafe
                 {
                     ReadOnlySpan<int> rSpan = new ReadOnlySpan<int>((void*)pointsData.countsPtr, totalRegions);
@@ -152,12 +153,12 @@ namespace WorldGenerator.Services
                     }
                 }
             }
-            List<Guid> relationIds = new List<Guid>();
+            List<Guid> relationIds = [];
             for (int i = 0; i< platesNum; i++)
             {
                 regionToPlate.TryGetValue(i, out List<NewRelationElement> elements);
                 var relation = new NewRelation() { Elements = elements, Name = $"Plate_{i}" };
-                var id = await _mapService.AddRelationsBatch(new List<NewRelation>() { relation });
+                var id = await _mapService.AddRelationsBatch([relation]);
                 relationIds.AddRange(id);
             }
             return relationIds;

@@ -63,9 +63,7 @@ namespace WorldGenerator.Repos
             {
                 throw new ArgumentException($"Zoom value must be between {Constants.MIN_ZOOM} and {Constants.MAX_ZOOM}");
             }
-            #region SQL
             var sql = new Lazy<string>(() => SqlLoader.Load("GetMapGeojson.sql"));
-            #endregion
 
             if (minLat > maxLat) {
                 (maxLat, minLat) = (minLat, maxLat);
@@ -90,7 +88,8 @@ namespace WorldGenerator.Repos
             var mapPart = GJReader.Read<FeatureCollection>(result.Resp);
             return mapPart;
         }
-        
+
+        #region Nodes operations
         /// <inheritdoc/>
         public async Task<Guid> AddNode(NewNode node)
         {
@@ -124,6 +123,55 @@ namespace WorldGenerator.Repos
         }
 
         /// <inheritdoc/>
+        public async Task<NodeExtended> GetNode(Guid id)
+        {
+            var sql = "SELECT n.id as id, n.name as name, n.geom as geom, n.tile_id as tileId, nt.k as \"Tags.Key\", nt.v as \"Tags.Value\" FROM Nodes n LEFT JOIN NodesTags nt ON nt.node_id = n.id WHERE n.id =@id";
+            var param = new DynamicParameters();
+            param.Add("id", id);
+            var result = await _db.MakeNestedQuery<NodeExtended>(sql, param);
+            return result.FirstOrDefault();
+        }
+        public async Task<Node> EditNode(UpdateNode node)
+        {
+            bool anyUpdate = false;
+            string sql = "UPDATE Nodes SET ";
+            var param = new DynamicParameters();
+            if(node.Name != null)
+            {
+                sql += "name = @name ";
+                param.Add("name", node.Name);
+                anyUpdate = true;
+            }
+            if(node.Geom != null)
+            {
+                sql += "geom = ST_SetSRID(ST_MakePoint(@lng, @lat), 4326) ";
+                param.Add("lat", node.Geom.Y);
+                param.Add("lng", node.Geom.X);
+                anyUpdate = true;
+            }
+            if(anyUpdate)
+            {
+                sql += "WHERE id=@id RETURNING id, name, tile_id, geom;";
+                var result = await _db.MakeQuery<Node>(sql, param);
+                return result.FirstOrDefault();
+            }
+            else
+            {
+                throw new ArgumentException("at least one data to change need to be given");
+            }
+
+        }
+
+        public Task<bool> DeleteNode(Guid id)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region Ways operations
+
+        /// <inheritdoc/>
         public async Task<List<Guid>> AddWaysBatch(List<NewWay> ways)
         {
             var sql = new Lazy<string>(() => SqlLoader.Load("AddWaysToMapBatch.sql"));
@@ -135,6 +183,21 @@ namespace WorldGenerator.Repos
             return result;
         }
 
+
+        public async Task<WayExtended> GetWay(Guid id)
+        {
+            string sql = "SELECT w.name AS name, w.id AS id, n.geom AS \"Nodes.Geom\", n.id AS \"Nodes.id\", tg.k AS \"Tags.Key\", tg.v AS \"Tags.Value\", tr.tile_id AS \"Traversal.TileId\" FROM Ways w LEFT JOIN WaysNodes wn ON wn.way_id = w.id LEFT JOIN Nodes n ON n.id = wn.node_id LEFT JOIN Traversal tr ON tr.way_id = w.id LEFT JOIN WaysTags tg ON tg.way_id = w.id WHERE w.id = @id";
+
+            var param = new DynamicParameters();
+            param.Add("id", id);
+            var response = await _db.MakeNestedQuery<WayExtended>(sql, param);
+            return response.FirstOrDefault();
+        }
+
+        #endregion
+
+        #region Relations operations
+
         public async Task<List<Guid>> AddRelationsBatch(List<NewRelation> relations)
         {
             var sql = new Lazy<string>(() => SqlLoader.Load("AddRelationsBatch.sql"));
@@ -145,5 +208,7 @@ namespace WorldGenerator.Repos
             var result = relationsIds.ToList();
             return result;
         }
+
+        #endregion
     }
 }
