@@ -15,7 +15,6 @@ namespace WorldGenerator.Services.Interfaces
         /// <param name="zoom"></param>
         /// <returns></returns>
         Task<FeatureCollection> GetMapPart(float minLat, float maxLat, float minLng, float maxLng, int zoom);
-
         #region Nodes opertaions
         /// <summary>
         /// Add nodes and return list of their ids

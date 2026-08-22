@@ -70,6 +70,8 @@ def generate_voronoi(points:np.ndarray, sphereSize:float)-> spatial.SphericalVor
     vertices = np.array([np.atan2(vertices[1], vertices[0])* 180/np.pi, np.arcsin(np.clip(vertices[2]/sphereSize, -1.0, 1.0))* 180/np.pi]) # transform to lat/lng
     vertices = vertices.T
 
+
+
     region_counts = np.fromiter([len(region) for region in voronoi.regions], dtype=int)
     regions = np.concatenate(voronoi.regions)
 
@@ -82,13 +84,6 @@ def assign_points_to_regions(points:np.ndarray, regions:np.ndarray)-> np.ndarray
     kd_tree = spatial.KDTree(regions, 1, False, balanced_tree=False) # create a kd tree for the centers of regions
     response = kd_tree.query(points, 1) # query the kd tree for the closest region to each point
     return response[1]
-
-def free_ndarray(toClear:np.ndarray):
-    """
-    free memory of a numpy array
-    """
-    del toClear
-    gc.collect()
 
 
 platesNum = 15

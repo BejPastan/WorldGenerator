@@ -1,9 +1,10 @@
 import { Map } from "./Map";
 import { httpGet } from "../lib/services/httpService";
 import { useRef, useState } from "react";
+import { FeatureGroup } from "leaflet";
 
 export function MapController(){
-    const [ geojsonData, setGeojsonData ]= useState(null);
+    const [ geojsonData, setGeojsonData ]= useState<FeatureGroup|null>(null);
     const bboxRef = useRef("");
 
     async function fetchData(bouds:any, zoom:number){
@@ -14,7 +15,7 @@ export function MapController(){
             "minLng": bouds.southWest.lng,
             "zoom": zoom
         }
-        var response = await httpGet("/api/map/geojson", params);
+        var response = await httpGet<FeatureGroup>("/api/map/geojson", params);
         setGeojsonData(response);
     }
 
@@ -26,6 +27,29 @@ export function MapController(){
         console.log("New bbox: ", newBbox, "new zoom: ", newZoom);
         fetchData(newBbox, newZoom);
     }
+
+    const jsonTest = {
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        -178,
+                        0
+                    ],
+                    [
+                        178,
+                        0
+                    ]
+                ]
+            },
+            "properties": {}
+        }
+    ]
+}
 
     return(
         <Map 

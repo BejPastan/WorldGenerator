@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using WorldGenerator.Models;
 using WorldGenerator.Services.Interfaces;
@@ -35,7 +36,6 @@ namespace WorldGenerator.Controllers
                 throw new NotImplementedException("tile mode is not implemented yet, please use geojson mode");
             }
         }
-
         //I need to simplify constructor and documentation here
         /// <summary>
         /// Add new polygon/path to map, and return it's id

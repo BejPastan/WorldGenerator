@@ -15,7 +15,6 @@ namespace WorldGenerator.Repos.Interfaces
         /// <param name="zoom"></param>
         /// <returns></returns>
         Task<FeatureCollection> GetMapPart(float minLat,  float maxLat, float minLng, float maxLng, int zoom);
-
         #region Way Operations
         #endregion
 

@@ -14,7 +14,7 @@ namespace WorldGenerator.Repos
             DbName = _config.GetRequiredSection("DBConnection:dbName").Value ?? "";
             DbUrl = _config.GetRequiredSection("DBConnection:url").Value ?? "";
             DbPort = _config.GetRequiredSection("DBConnection:port").Value ?? "";
-            DbName = _config.GetRequiredSection("DBConnection:pass").Value ?? "";
+            DbPass = _config.GetRequiredSection("DBConnection:pass").Value ?? "";
             DbUserName = _config.GetRequiredSection("DBConnection:username").Value ?? "";
             _logger.LogInformation("Database settings initialized");
             PythonPath = _config.GetRequiredSection("PythonSettings:path").Value ?? "";

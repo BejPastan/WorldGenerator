@@ -2,44 +2,6 @@ import { MapContainer, GeoJSON, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useState } from 'react';
 
-const sampleGeoJson: any = {
-  type: "FeatureCollection",
-  features: [
-    {
-      type: "Feature",
-      properties: { name: "Sample Polygon" },
-      geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [-0.5, 0.5],
-            [-0.5, -0.5],
-            [0.5, -0.5],
-            [0.5, 0.5],
-            [-0.5, 0.5]
-          ]
-        ]
-      }
-    },
-    {
-      type: "Feature",
-      properties: { name: "Sample Polygon" },
-      geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [-1.5, 0.5],
-            [-1.5, -0.5],
-            [-1.0, -0.5],
-            [-1.0, 0.5],
-            [-1.5, 0.5]
-          ]
-        ]
-      }
-    }
-  ]
-};
-
 export interface MapProps {
     height: string;
     width: string;
@@ -52,6 +14,8 @@ export interface MapProps {
 export function Map({height, width, center=[0,0], zoom=10, onBboxChange, geoData=null}: MapProps) {
     const [ currentZoom, setCurrentZoom ] = useState(zoom);
     const [ currentCenter, setCurrentCenter ] = useState<[number, number]>(center);
+
+    console.log(geoData);
 
     const MapEventListener = () =>
     {
@@ -87,7 +51,9 @@ export function Map({height, width, center=[0,0], zoom=10, onBboxChange, geoData
                 >
                 <MapEventListener/>
                 {geoData!=null &&                 
-                <GeoJSON data={geoData}
+                <GeoJSON 
+                key={JSON.stringify(geoData)}
+                data={geoData}
                 style={() => ({
                     color: '#ff7800',
                     weight: 5,

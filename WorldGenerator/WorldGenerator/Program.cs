@@ -26,7 +26,7 @@ builder.Services.AddSingleton<IDBHandler, DBController>();
 
 builder.Services.AddScoped<IMapRepo, MapRepo>();
 builder.Services.AddScoped<IMapService, MapService>();
-builder.Services.AddScoped<IMapGenerator, MapGenerator>();
+//builder.Services.AddScoped<IMapGenerator, MapGenerator>();
 
 builder.Services.AddControllers();
 builder.Services.AddControllers().AddJsonOptions(options =>
