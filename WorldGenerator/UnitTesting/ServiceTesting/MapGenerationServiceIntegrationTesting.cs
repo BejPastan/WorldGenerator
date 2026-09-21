@@ -46,12 +46,17 @@ namespace UnitTesting.ServiceTesting
             int platesNum = 15;
             int segmentsNum = 10000;
             float planetSize = 5000f;
-
+            
+            long currentTime = System.Diagnostics.Stopwatch.GetTimestamp();
+            Console.WriteLine($"Starting test at: {currentTime / (double)System.Diagnostics.Stopwatch.Frequency} seconds");
             //Act
-            //var resp = await mapGenerator.GenerateTectonicPlates(platesNum, segmentsNum, planetSize);
+            var resp = await mapGenerator.GenerateTectonicPlates(platesNum, segmentsNum, planetSize, "");
+
+            long elapsedTime = System.Diagnostics.Stopwatch.GetTimestamp() - currentTime;
+            Console.WriteLine($"Elapsed time: {elapsedTime / (double)System.Diagnostics.Stopwatch.Frequency} seconds");
 
             //Assert
-            //resp.Count().Should().BeLessThanOrEqualTo(platesNum);
+            resp.Count().Should().BeLessThanOrEqualTo(platesNum);
         }
     }
 }

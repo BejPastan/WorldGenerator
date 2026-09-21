@@ -36,14 +36,7 @@ jsonb_build_object
                         LEFT JOIN WaysNodes wn ON wn.way_id = w.id
                         LEFT JOIN Nodes n ON n.id = wn.node_id
                         LEFT JOIN WaysTags wt ON wt.way_id = w.id
-                        WHERE EXISTS
-                        (
-                                SELECT 1 FROM WaysNodes wn
-                                JOIN Nodes n ON n.id = wn.node_id
-                                WHERE
-                                    wn.way_id = w.id AND
-					            	geom::geometry && ST_MakeEnvelope(@minLng, @minLat, @maxLng, @maxLat, 4326)                        
-                        )
+                        WHERE w.id = ANY(get_way_in_bbox(@minLng, @minLat, @maxLng, @maxLat, @zoom_level))
                         GROUP BY w.id
                 ) geom_data
  ) objects

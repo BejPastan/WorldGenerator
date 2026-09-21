@@ -4,9 +4,6 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NetTopologySuite.Features;
 using NetTopologySuite.Geometries;
-using NetTopologySuite.Index.Bintree;
-using NetTopologySuite.IO;
-using Testcontainers.PostgreSql;
 using UnitTesting.IntegrationTests;
 using WorldGenerator.Models;
 using WorldGenerator.Repos;
@@ -204,7 +201,7 @@ namespace UnitTesting.RepoTesting
             //Assert
             way.Should().NotBeNull();
             way.Id.Should().Be(wayId[0]);
-            way.nodes.Should().NotBeNull();
+            way.Nodes.Should().NotBeNull();
         }
 
         [Fact]
@@ -279,10 +276,11 @@ namespace UnitTesting.RepoTesting
             var way = await _mapRepo.GetWay(waysIds[0]);
             resp.Should().BeTrue();
 
-            way.nodes[0].Id.Should().Be(nodesIds[1]);
-            way.traversal.Should().NotBeEquivalentTo(oldData.traversal);
+            way.Nodes[0].Id.Should().Be(nodesIds[1]);
+            way.Traversal.Should().NotBeEquivalentTo(oldData.Traversal);
         }
 
+        [Fact]
         private async Task MapRepoIntegrationTest_EditNode_ReturnNode()
         {
             //Arrange
@@ -317,6 +315,7 @@ namespace UnitTesting.RepoTesting
 
             Point newGeom = new Point(new Coordinate(0.0f, 0.0));
             UpdateNode update = new(toEdit) { Geom = newGeom };
+            update.Name = null;
 
             //Act
             var resp = await _mapRepo.EditNode(update);
@@ -325,7 +324,7 @@ namespace UnitTesting.RepoTesting
             var way = await _mapRepo.GetWay(waysIds[0]);
             resp.Name.Should().Be(node.Name);
             resp.Geom.Should().BeEquivalentTo(newGeom);
-            way.traversal.Should().NotBeEquivalentTo(oldData.traversal);
+            way.Traversal.Should().NotBeEquivalentTo(oldData.Traversal);
         }
 
         /// <summary>

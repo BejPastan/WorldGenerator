@@ -8,13 +8,13 @@
         Empty
     }
 
-    public abstract class Tag
+    public class Tag
     {
-        public Guid? Id { get; set; }
+        public Guid? Id { get; set; } = null;
         public string Key { get; set; } = string.Empty;
         public string Value { get; set; } = string.Empty;
-        public abstract Guid ElementId { get; set; }
-        public abstract TagElementType ElementType { get; }
+        public virtual Guid ElementId { get; set; }
+        public virtual TagElementType ElementType { get; }
     }
 
     public class NodeTag : Tag

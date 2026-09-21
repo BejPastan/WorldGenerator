@@ -1,4 +1,5 @@
 ﻿using Moq;
+using System.Diagnostics;
 using Testcontainers.PostgreSql;
 using WorldGenerator.Repos.Interfaces;
 
@@ -20,10 +21,12 @@ namespace UnitTesting.IntegrationTests
             _container = new PostgreSqlBuilder("postgis/postgis:17-3.5-alpine")
                 .WithBindMount(sqlPath, "/docker-entrypoint-initdb.d/init.sql")
                 .Build();
-                await _container.StartAsync();
-                //string connectionString = _container.GetConnectionString();
-                //var fakeConnectionFactory = new Mock<IDBConnectionFactory>();
-                //fakeConnectionFactory.Setup(f => f.GetConnectionString()).Returns(connectionString);
+            await _container.StartAsync();
+            string connectionString = _container.GetConnectionString();
+            Console.WriteLine(_container.GetConnectionString());
+            //string connectionString = _container.GetConnectionString();
+            //var fakeConnectionFactory = new Mock<IDBConnectionFactory>();
+            //fakeConnectionFactory.Setup(f => f.GetConnectionString()).Returns(connectionString);
         }
 
         public async Task DisposeAsync()

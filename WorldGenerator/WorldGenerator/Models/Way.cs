@@ -29,8 +29,8 @@
             } 
         }
         public Guid id { get; set; }
-        public List<Node> nodes {  get; set; } = [];
-        public List<Tag> tags { get; set; } = [];
-        public List<Traversal> traversal { get; set; } = [];
+        public List<Node> Nodes { get; set; } = new();
+        public List<Tag> Tags { get; set; } = new();
+        public List<Traversal> Traversal { get; set; } = new();
     }
 }

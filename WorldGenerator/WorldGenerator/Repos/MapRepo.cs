@@ -136,22 +136,24 @@ namespace WorldGenerator.Repos
             bool anyUpdate = false;
             string sql = "UPDATE Nodes SET ";
             var param = new DynamicParameters();
+            param.Add("id", node.Id);
             if(node.Name != null)
             {
-                sql += "name = @name ";
+                sql += "name = @name ,";
                 param.Add("name", node.Name);
                 anyUpdate = true;
             }
             if(node.Geom != null)
             {
-                sql += "geom = ST_SetSRID(ST_MakePoint(@lng, @lat), 4326) ";
+                sql += "geom = ST_SetSRID(ST_MakePoint(@lng, @lat), 4326) ,";
                 param.Add("lat", node.Geom.Y);
                 param.Add("lng", node.Geom.X);
                 anyUpdate = true;
             }
             if(anyUpdate)
             {
-                sql += "WHERE id=@id RETURNING id, name, tile_id, geom;";
+                sql = sql.TrimEnd(','); // Remove the trailing comma
+                sql += "WHERE id = @id RETURNING id, name, tile_id, geom;";
                 var result = await _db.MakeQuery<Node>(sql, param);
                 return result.FirstOrDefault();
             }
@@ -162,9 +164,22 @@ namespace WorldGenerator.Repos
 
         }
 
-        public Task<bool> DeleteNode(Guid id)
+        public async Task<bool> DeleteNode(Guid id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var sql = "DELETE FROM Nodes WHERE id=@id";
+                var param = new DynamicParameters();
+                param.Add("id", id);
+                var result = await _db.MakeQuery<int>(sql, param);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error deleting node with id {id}: {ex.Message}");
+                return false;
+            }
+
         }
 
         #endregion
@@ -186,7 +201,7 @@ namespace WorldGenerator.Repos
 
         public async Task<WayExtended> GetWay(Guid id)
         {
-            string sql = "SELECT w.name AS name, w.id AS id, n.geom AS \"Nodes.Geom\", n.id AS \"Nodes.id\", tg.k AS \"Tags.Key\", tg.v AS \"Tags.Value\", tr.tile_id AS \"Traversal.TileId\" FROM Ways w LEFT JOIN WaysNodes wn ON wn.way_id = w.id LEFT JOIN Nodes n ON n.id = wn.node_id LEFT JOIN Traversal tr ON tr.way_id = w.id LEFT JOIN WaysTags tg ON tg.way_id = w.id WHERE w.id = @id";
+            string sql = "SELECT w.name AS \"Name\", w.id AS \"Id\", n.id AS \"Nodes_Id\", n.geom AS \"Nodes_Geom\", tg.id AS \"Tags_Id\", tg.k AS \"Tags_Key\", tg.v AS \"Tags_Value\", tr.id AS \"Traversal_Id\", tr.tile_id AS \"Traversal_TileId\" FROM Ways w LEFT JOIN WaysNodes wn ON wn.way_id = w.id LEFT JOIN Nodes n ON n.id = wn.node_id LEFT JOIN Traversal tr ON tr.way_id = w.id LEFT JOIN WaysTags tg ON tg.way_id = w.id WHERE w.id = @id";
 
             var param = new DynamicParameters();
             param.Add("id", id);
